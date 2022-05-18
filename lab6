@@ -1,0 +1,109 @@
+"""3.	Формируется матрица F следующим образом: скопировать в нее А и если в С количество
+положительных элементов в четных столбцах больше, чем количество отрицательных  элементов в нечетных столбцах, то поменять местами В и С
+симметрично, иначе С и Е поменять местами несимметрично. При этом матрица А не меняется. После чего если определитель матрицы А больше суммы диагональных
+элементов матрицы F, то вычисляется выражение: A*AT – K * F-1, иначе вычисляется выражение (A-1 +G-F-1)*K, где G-нижняя
+треугольная матрица, полученная из А. Выводятся по мере формирования А, F и все матричные операции последовательно."""
+import math
+
+import numpy as np
+import time
+N = int(input("Введите количество строк (столбцов) квадратной матрицы в интервале от 4 до 100: "))
+while N < 4 or 100 < N:
+    N = int(input("Введите количество строк (столбцов) квадратной матрицы в интервале от 4 до 100: "))
+
+k = int(input("Введите число К: "))
+n1 = 0 #счетчик количества положительных элементов в четных столбцах в подматрице С
+n2 = 0 #счетчик количества отрицательных  элементов в нечетных столбцах в подматрице С
+sum_d = 0
+start = time.time()
+A = np.random.randint(-10, 10, (N, N)) #заполняем матрицу А случайными числами
+print("Матрица А")
+print(A)
+F = A.copy()           #копируем элементы матрицы А в матрицу F
+print("Матрица F")
+print(F)
+n = N // 2             #размер подматрицы С
+C = np.zeros((n, n))   #заполняем подматрицу С нулями
+print("Матрица C")
+print(C)
+for i in range(n):     #заполняем подматрицу С элементами из митрицы F
+    for j in range(n):
+        C[i][j] = F[i][n + (N % 2) + j]
+print("Матрица C")
+print(C)
+for i in range(n):     #обрабатываем условия изменения матрицы С
+    for j in range(n):
+        if j % 2 != 0 and C[i][j] > 0:
+            n1 += 1
+        if j % 2 == 0 and C[i][j] < 0:
+            n2 += 1
+print("Количество положительных элементов в четных столбцах в подматрице С: ", n1)
+print("Количество отрицательных  элементов в нечетных столбцах в подматрице С: ", n2)
+if n1 > n2:
+    for i in range(0, N // 2):#меняем местами В и С симметрично
+        for j in range(0, N // 2):
+            F[i][j], F[i][N - j - 1] = F[i][N - j - 1], F[i][j]
+else:
+    for i in range(N // 2): #меняем местами С и Е несимметрично
+        for j in range((N // 2) + (N % 2), N):
+            F[i][j], F[N // 2 + N % 2 + i][j] = F[N // 2 + N % 2 + i][j], F[i][j]
+print("Матрица F")
+print(F)
+for i in range(N):     #считаем сумму диагональных элементов матрицы F
+    for j in range(N):
+        if (i == j) or (i + j == N - 1):
+            sum_d += F[i][j]
+if np.linalg.det(A) > sum_d:     #A*AT – K * F-1
+    a = A.dot(A.T) - (k * np.linalg.inv(F))
+    print("Матрица A*AT – K * F-1")
+    print(a)
+else:                            #(A-1 +G-F-1)*K
+    a = (np.linalg.inv(A) + np.tril(A) - np.linalg.inv(F)) * k
+    print("Матрица (A-1 +G-F-1)*K")
+    print(a)
+end = time.time()
+print("ремя работы программы: ", end - start)
+
+
+import matplotlib.pyplot as plt
+
+fig, ax = plt.subplots()
+ax.set(xlabel='values', ylabel='numbers')
+ax.grid()
+fig.savefig("test.png")
+for j in range(N):
+    ax.plot([i for i in range(N)], a[j][::])
+    ax.scatter([i for i in range(N)], a[j][::])
+plt.show()
+
+
+
+ax = plt.figure().add_subplot(projection='3d')
+for i in range(N):
+    plt.plot([j for j in range(N)], a[i][::], i)
+ax.legend()
+ax.set_xlabel('values')
+ax.set_ylabel('numbers')
+ax.set_zlabel('Z')
+plt.show()
+
+
+
+fig, ax = plt.subplots()
+ax.grid()
+ax.spines[["left", "bottom"]].set_position(("data", 0))
+ax.spines[["top", "right"]].set_visible(False)
+ax.plot(1,0 , ">k", transform=ax.get_yaxis_transform(), clip_on=False)
+ax.plot(0,1 , "^k", transform=ax.get_xaxis_transform(), clip_on=False)
+for i in range(N):
+    plt.plot(a[i][::], [j for j in range(N)])
+plt.show()
+
+
+
+fig, ax = plt.subplots()
+ax.set(xlabel='values', ylabel='numbers')
+for i in range(N):
+    for j in range(N):
+        plt.bar(i, a[i][j], width=0.5)
+plt.show()
